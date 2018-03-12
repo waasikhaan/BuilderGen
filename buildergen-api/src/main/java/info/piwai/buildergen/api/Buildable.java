@@ -38,6 +38,18 @@ import java.lang.annotation.Target;
  * 
  * will generate a MyBeanFactory class.<br />
  * <br />
+ * Generated Builder has default 'create' factory method which can be changed by
+ * specifying a different value using 'factoryMethod' attribute. For instance:
+ *
+ * <pre>
+ *     <code>
+ *      @Builder(value = "Factory", factoryMethod="custom")
+ *      public class MyBean {
+ *      }
+ *     </code>
+ * </pre>
+ * will generate a factory method named <code>custom()</code>
+ * <br />
  * The {@link Buildable} annotated element should be a class. It cannot be an
  * enum, nor an inner class. It should not be abstract. <br />
  * 
@@ -60,4 +72,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Buildable {
 	String value() default "Builder";
+	String factoryMethod() default "create";
 }

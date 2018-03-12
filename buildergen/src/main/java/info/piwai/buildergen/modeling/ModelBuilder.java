@@ -184,7 +184,7 @@ public class ModelBuilder {
 		buildBody._return(newBuildable);
 
 		JClass mandatoryClass = codeModel.ref(Mandatory.class);
-		if (mandatoryParameters.size() != 0) {
+		if (!mandatoryParameters.isEmpty()) {
 			JMethod builderConstructor = builderClass.constructor(JMod.PUBLIC);
 			JBlock constructorBody = builderConstructor.body();
 
@@ -214,23 +214,24 @@ public class ModelBuilder {
 			}
 		}
 
-		JMethod createMethod = builderClass.method(JMod.PUBLIC | JMod.STATIC, builderClass, "create");
-		JBlock createBody = createMethod.body();
+		String factoryMethodName = extractFactoryMethodName(buildableElement);
+		JMethod factoryMethod = builderClass.method(JMod.PUBLIC | JMod.STATIC, builderClass, factoryMethodName);
+		JBlock factoryMethodBody = factoryMethod.body();
 
-		JDocComment createJavadoc = createMethod.javadoc();
+		JDocComment factoryMethodJavadoc = factoryMethod.javadoc();
 
 		JInvocation newBuilder = JExpr._new(builderClass);
-		if (mandatoryParameters.size() != 0) {
+		if (!mandatoryParameters.isEmpty()) {
 			for (VariableElement parameter : mandatoryParameters) {
 				String paramName = parameter.getSimpleName().toString();
 				JFieldVar paramField = builderClass.fields().get(paramName);
 				JType paramClass = paramField.type();
 
-				JVar createParam = createMethod.param(paramClass, paramName);
+				JVar createParam = factoryMethod.param(paramClass, paramName);
 
 				newBuilder.arg(createParam);
 
-				createJavadoc.addParam(createParam) //
+				factoryMethodJavadoc.addParam(createParam) //
 						.append("the value for the ") //
 						.append(paramName) //
 						.append(" @").append(mandatoryClass) //
@@ -240,9 +241,9 @@ public class ModelBuilder {
 				;
 			}
 		}
-		createBody._return(newBuilder);
+		factoryMethodBody._return(newBuilder);
 
-		createJavadoc.append("Static factory method for ") //
+		factoryMethodJavadoc.append("Static factory method for ") //
 				.append(builderClass) //
 				.append(" instances.") //
 				.addReturn() //
@@ -292,4 +293,8 @@ public class ModelBuilder {
 		return buildableFullyQualifiedName + builderSuffix;
 	}
 
+	private String extractFactoryMethodName(TypeElement buildableElement) {
+		Buildable buildableAnnotation = buildableElement.getAnnotation(Buildable.class);
+		return buildableAnnotation.factoryMethod();
+	}
 }
